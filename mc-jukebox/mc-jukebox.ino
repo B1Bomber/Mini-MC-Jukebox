@@ -48,13 +48,6 @@ int currentMusic;
 void setup() {
   // debug
   Serial.begin(9600);
-  currentRFID = scanRFID();
-  currentMusic = lookup(currentRFID);
-  player.playMp3Folder(currentMusic);
-
-  Serial.println(currentRFID);
-  Serial.println(currentMusic);
-  Serial.println(digitalRead(busyPin));
 
   SPI.begin();
   mfrc522.PCD_Init();
@@ -70,15 +63,22 @@ void loop() {
   currentMusic = lookup(currentRFID);
   player.playMp3Folder(currentMusic);
 
-  Serial.println(currentRFID);
-  Serial.println(currentMusic);
-  Serial.println(digitalRead(busyPin));
+  // debug
+  Serial.println("Current RFID ")
+  Serial.print(currentRFID);
+  Serial.println("Current Music ");
+  Serial.print(currentMusic);
+  Serial.println("Busy Pin ")
+  Serial.print(digitalRead(busyPin));
 
   // While there is something playing
   while (digitalRead(busyPin) == LOW) { 
     // If RFID does not match anymore, exit the playing loop
     // currentRFID != scanRFID()
     if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()){
+      // debug
+      Serial.println("Halting Player");
+
       break;
     }
     // Stops the Arduino from interfering with the mp3 player
@@ -88,17 +88,18 @@ void loop() {
 
 String scanRFID() {
   // debug
-  Serial.println("scan");
+  Serial.println("Scan Begin");
 
   // ensure there is a new card
   if (!mfrc522.PICC_IsNewCardPresent()) {
-    Serial.println("no card");
+    // debug
+    Serial.println("Error: No Card");
     return "";
   }
   // if reading fails exit to prevent hangs
   if (!mfrc522.PICC_ReadCardSerial()) {
     // debug 
-    Serial.println("read fail");
+    Serial.println("Error: Read Fail");
     return "";
   }
   String rfid= "";
