@@ -5,21 +5,12 @@
 
 #define SDA_Pin 10
 #define RST_Pin 9
-#define MP3_Power A1
 
 MFRC522 mfrc522(SDA_Pin, RST_Pin);
 
 String RFID1 = "B390698";
 String RFID2 = "E39948C6";
 String RFID3 = "4263A9A137580";
-
-int volume = 10;
-const int busyPin = 4;
-// Use pins 2 and 3 to communicate with DFPlayer Mini
-static const int TX_Pin = 2;
-static const int RX_Pin = 3;
-SoftwareSerial softwareSerial(RX_Pin, TX_Pin);
-DFRobotDFPlayerMini player;
 
 struct Map {
   String key;
@@ -32,6 +23,7 @@ const Map table[] = {
   {RFID3, 3},
 };
 
+// slightly faster than putting this in lookup() since you only calculate this once
 int tableLength = sizeof(table) / sizeof(table[0]);
 
 // Table is very small, so O(n) is constant
@@ -44,8 +36,13 @@ int lookup(String s) {
   return 0;
 }
 
-String currentRFID;
-int currentMusic;
+int volume = 10;
+const int busyPin = 4;
+// Use pins 2 and 3 to communicate with DFPlayer Mini
+static const int TX_Pin = 2;
+static const int RX_Pin = 3;
+SoftwareSerial softwareSerial(RX_Pin, TX_Pin);
+DFRobotDFPlayerMini player;
 
 void setup() {
   // debug
@@ -58,51 +55,44 @@ void setup() {
   softwareSerial.begin(9600);
   player.begin(softwareSerial);
   player.volume(volume);
-
-  pinMode(MP3_Power, OUTPUT);
-  playMusic();
 }
 
-void loop() {}
+void loop() {
+  playMusic("", "");
+}
 
-void playMusic() {
-  // play the music after RFID is detected
-  // turn on the MP3 player
-  analogWrite(MP3_Power, 255);
-
-  currentRFID = scanRFID();
+// play the music after RFID is detected
+void playMusic(String previousRFID, String currentRFID) {
   while (currentRFID == "") {
     currentRFID = scanRFID();
   }
 
-  currentMusic = lookup(currentRFID);
+  int currentMusic = lookup(currentRFID);
   player.playMp3Folder(currentMusic);
 
   // debug
-  Serial.println("Current RFID ");
-  Serial.print(currentRFID);
-  Serial.println("Current Music ");
-  Serial.print(currentMusic);
-  Serial.println("Busy Pin ");
-  Serial.print(digitalRead(busyPin));
+  Serial.print("Current RFID ");
+  Serial.println(currentRFID);
+  Serial.print("Current Music ");
+  Serial.println(currentMusic);
+  Serial.print("Busy Pin ");
+  Serial.println(digitalRead(busyPin));
 
   // While there is something playing
   while (digitalRead(busyPin) == LOW) { 
+    previousRFID = currentRFID;
+    currentRFID = scanRFID();
     // If RFID does not match anymore, exit the playing loop
-    // currentRFID != scanRFID()
-    if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()){
+    // currentRFID != previousRFID
+    if (isCardPresent()){
       // debug
       Serial.println("Halting Player");
 
-      analogWrite(MP3_Power, 0);
+      player.stop();
 
       break;
     }
-    // Stops the Arduino from interfering with the mp3 player
-    delay(1);
   }
-
-  playMusic();
 }
 
 String scanRFID() {
@@ -110,15 +100,9 @@ String scanRFID() {
   Serial.println("Scan Begin");
 
   String rfid = "";
-  // ensure there is a new card
-  if (!mfrc522.PICC_IsNewCardPresent()) {
+  // ensure there is a new card and if reading fails exit to prevent hangs
+  if (!mfrc522.PICC_IsNewCardPresent() || !mfrc522.PICC_ReadCardSerial()) {
     // debug
-    Serial.println("Error: No Card");
-    return rfid;
-  }
-  // if reading fails exit to prevent hangs
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    // debug 
     Serial.println("Error: Read Fail");
     return rfid;
   }
@@ -129,8 +113,20 @@ String scanRFID() {
   rfid.toUpperCase();
 
   // debug
-  Serial.println("rfid num");
+  Serial.print("rfid nummber: ");
   Serial.println(rfid);
 
   return rfid;
+}
+
+bool isCardPresent() {
+  // This trick re-selects the card. If it fails, the card is gone.
+  byte bufferATQA[2];
+  byte bufferSize = sizeof(bufferATQA);
+  MFRC522::StatusCode status = mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
+  
+  if (status == MFRC522::STATUS_OK) {
+    return mfrc522.PICC_ReadCardSerial(); 
+  }
+  return false;
 }

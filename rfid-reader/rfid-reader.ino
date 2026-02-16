@@ -32,6 +32,6 @@ void loop() {
   }
   rfid.toUpperCase();
   Serial.println(rfid);
-  delay(500);
+  delay(50);
 } 
 
