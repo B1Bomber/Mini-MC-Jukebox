@@ -83,15 +83,15 @@ void playMusic(String previousRFID, String currentRFID) {
     previousRFID = currentRFID;
     currentRFID = scanRFID();
     // If RFID does not match anymore, exit the playing loop
-    // currentRFID != previousRFID
     if (currentRFID != previousRFID){
       // debug
       Serial.println("Halting Player");
 
       player.stop();
-
-      break;
+      //break;
     }
+
+    delay(100);
   }
 }
 
@@ -101,7 +101,7 @@ String scanRFID() {
   
   String rfid = "";
 
-  // 1. Force the reader to "wake up" any card in the field
+  // Force the reader to wake up to any card in the field
   byte bufferATQA[2];
   byte bufferSize = sizeof(bufferATQA);
   
@@ -112,18 +112,18 @@ String scanRFID() {
   MFRC522::StatusCode status = mfrc522.PICC_RequestA(bufferATQA, &bufferSize);
 
   if (status == mfrc522.STATUS_OK && mfrc522.PICC_ReadCardSerial()) {
-    // 2. If a card responded, try to read its serial number
+    // If a card responded, try to read its serial number
     for (byte i = 0; i < mfrc522.uid.size; i++) {
       rfid.concat(String(mfrc522.uid.uidByte[i], HEX));
     }
     rfid.toUpperCase();
 
-    // 3. Stop communication so we can start fresh next loop
+    // Stop communication so we can start fresh next loop
     mfrc522.PICC_HaltA();
     mfrc522.PCD_StopCrypto1();
   }
   
-  delay(150);
+  delay(200);
 
   // debug
   Serial.print("rfid nummber: ");
