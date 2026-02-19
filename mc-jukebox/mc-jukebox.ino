@@ -105,6 +105,7 @@ String scanRFID() {
     mfrc522.PCD_StopCrypto1();
   }
   
+  // used to set the sample rate
   delay(200);
   return rfid;
 }
