@@ -15,3 +15,5 @@
 `README.md` Congratulations on reading this file!
 
 ---
+
+Read this [manual](https://docs.google.com/document/d/1vcMgotmw0yjO9905EWyEMmejuj2nVZ_aUIRoAjeFGmY/edit?usp=sharing) for the full setup and documentation.
