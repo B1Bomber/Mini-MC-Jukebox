@@ -1,17 +1,17 @@
 # Documentation
 
+`mc-jukebox` contains the current working code for the jukebox. 
 
-## External Tools
+`rfid-reader` contains the current working code for finding the RFID of tags and cards. 
 
-### maps
-https://github.com/maniacbug/StandardCplusplus/blob/master/map
+`experimental` contains the work in progress version for the code above. 
 
-### Standard Library
-https://andybrown.me.uk/2011/01/15/the-standard-template-library-stl-for-avr-with-c-streams/
+`mc-jukebox-backup.ino ` is the backup version of `mc-jukebox` with all the debug information
 
-### DFRobotDFPlayerMini 
-https://github.com/DFRobot/DFRobotDFPlayerMini
+`rfid-reader-backup.ino` is the backup version of `rfid-reader` with all the debug information
 
-### RFID
-https://randomnerdtutorials.com/security-access-using-mfrc522-rfid-reader-with-arduino/
-use github community library
+`LICENSE` MIT License
+
+`README.md` Congratulations on reading this file!
+
+---
